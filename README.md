@@ -1,7 +1,9 @@
 # Description
 
-This repo is a hardhat enviroment. The contract (and interface) I would like audited is in ./contracts .
-./externalRouterTestContracts is an attempt to get the Uniswap routing to an external contract- described in the first block-comment of HumbleDonations.sol . NOC21 was the last iteration of HumbleDonations.sol before it was rename to HumbleDonations.sol.
+This repo is a hardhat enviroment. The contract (and interface) I would like audited is in ./contracts . ABI is located artifacts/contracts/HumbleDonations.sol/HumbleDonations.json
+
+Contract is live on Sepolia @ 0xB9fe62Fbd99B3A57699B4f10b246e69761D9FEB4
+The verified proxy contract is @ 0xA065893FAd2802231684B067f2788D0BDEf8aDCd
 
 I can happily provide more scripts at request.
 
