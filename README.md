@@ -10,9 +10,11 @@ I can happily provide more scripts at request.
 Hardhat/node commands:
 
 ```shell
-yarn hardhat run scripts/deployHumbleDonations/deploy-NOC21SepoliaUUPS.js
-yarn hardhat run scripts/deployHumbleDonations/upgrade-NOC21SepoliaUUPS.js
+yarn hardhat run scripts/deployHumbleDonations/deploy-HumbleDonations.js
+yarn hardhat run scripts/deployHumbleDonations/upgrade-HumbleDonations.js
 
 yarn node scripts/setGet/getEverything.mjs
-yarn node scripts/setGet/getEverything.mjssetEssentials.mjs
+yarn node scripts/setGet/setEssentials.mjs
 ```
+
+To use the hardhat commands, a .env file will need to be created which defines API_URL_SEPOLIA (or desired network) and PRIVATE_KEY
