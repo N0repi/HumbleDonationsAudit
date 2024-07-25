@@ -49,7 +49,7 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
     */
     
     // -----CONSTANTS-----
-    address private constant SWAP_ROUTER_02 = (0x101F443B4d1b059569D643917553c771E1b9663E);
+    address private constant SWAP_ROUTER_02 = (0x3bFA4769FB09eefC5a80d6E87c3B9C650f7Ae48E);
     /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     IV3SwapRouter public immutable swapRouter = IV3SwapRouter(SWAP_ROUTER_02);
     // -----CONSTANTS-----
@@ -79,7 +79,7 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
 
 
     // -----DECLARATIONS-----
-    address private constant recipient1 = 0x68b43a1c7DfC773Ac84c37A62BfA76e3055b7074; // Temp wallet for Arbitrum Sepolia | sepolia safe
+    address private constant recipient1 = 0xfdA30F9d6A3864f092586Cf755Fc8FCdaF8BB5Ae; // Sepolia safe
     address private constant recipient2 = 0x88b944E7E3D495B88cAa62FB0158F697C9A1561d; // dev
 
     uint256 public upgradeCount; // Variable to track the number of upgrades
