@@ -13,13 +13,14 @@ Humble Donations allows users to create a project (minting an ERC721 token) and 
 
 HDT is also used as a governance token which does also not appear in this repository.
 
-## Expected Rules of HumbleDonations.sol
+## Expected Behavior of HumbleDonations.sol
 
-A wallet address should not be able to mint a ERC721 token from `safeMint` if the wallet already owns a ERC721 token from this contract.
+_This are the current rules that I've implemented for the contract_
+A wallet address is not be able to mint a ERC721 token from `safeMint` if the wallet already owns a ERC721 token from this contract.
 
-If a wallet address reliquinishes ownership of their ERC721 token by burning the token, calling `burnToken`, then wallet address should be able to mint another ERC721 token from `safeMint`.
+If a wallet address reliquinishes ownership of their ERC721 token by burning the token, calling `burnToken`, then wallet address is able to mint another ERC721 token from `safeMint`.
 
-`projectTitle` is a required input value for `safeMint` which defines the title of a (donation/crowdfunding) project. A ERC721 token should not be minted if the same `projectTitle` has previously been used in another ERC721 token.
+`projectTitle` is a required input value for `safeMint` which defines the title of a (donation/crowdfunding) project. A ERC721 token will not be minted if the same `projectTitle` has previously been used in another ERC721 token.
 
 This repo is a hardhat enviroment. The contract (and interface) I would like audited is in [contracts](https://github.com/N0repi/HumbleDonationsAudit/tree/main/contracts) . ABI is located [artifacts](artifacts/contracts/HumbleDonations.sol/HumbleDonations.json)
 
