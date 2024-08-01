@@ -1,14 +1,14 @@
 $ grep -v -E '(^\s*//|^\s*import)' contracts/HumbleDonations.sol | sed '/\/\*/,/\*\//d' > temp.sol
-$ wc -l < temp.sol
-349
-$ cloc --exclude-lang=XML temp.sol
+wc -l < temp.sol
+cloc --exclude-lang=XML temp.sol
+366
        1 text file.
        1 unique file.                              
        0 files ignored.
 
-github.com/AlDanial/cloc v 1.90  T=0.01 s (101.9 files/s, 35561.4 lines/s)
+github.com/AlDanial/cloc v 1.90  T=0.01 s (93.7 files/s, 34298.1 lines/s)
 -------------------------------------------------------------------------------
 Language                     files          blank        comment           code
 -------------------------------------------------------------------------------
-Solidity                         1             85              0            264
+Solidity                         1             91              0            275
 -------------------------------------------------------------------------------

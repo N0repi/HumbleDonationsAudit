@@ -4,7 +4,7 @@ const hre = require("hardhat");
 const { ethers } = require("hardhat");
 
 async function main() {
-  const contractAddress = "0xB9fe62Fbd99B3A57699B4f10b246e69761D9FEB4";
+  const contractAddress = "0xc0D69FE23f5B83EcFBC5D0A5025f780170BeB529";
 
   const HumbleDonations = await hre.ethers.getContractAt(
     "HumbleDonations",

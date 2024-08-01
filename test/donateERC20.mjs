@@ -5,6 +5,7 @@ dotenv.config();
 import { ethers } from "ethers";
 
 import erc20Abi from "./tokenABI/erc20Abi.json" assert { type: "json" };
+import { computeMerkleProof } from "../scripts/whiteList/merkleProof.mjs";
 import HumbleDonations from "../artifacts/contracts/HumbleDonations.sol/HumbleDonations.json" assert { type: "json" };
 
 const { abi: HumbleDonationsAbi } = HumbleDonations;
@@ -26,13 +27,17 @@ const hdtContract = new ethers.Contract(HDT_ADDRESS, erc20Abi, signer);
 const usdcContract = new ethers.Contract(USDC_ADDRESS, erc20Abi, signer);
 
 // -------- Change For Testing --------
-const contractAddress = "0xB9fe62Fbd99B3A57699B4f10b246e69761D9FEB4";
+const contractAddress = "0xc0D69FE23f5B83EcFBC5D0A5025f780170BeB529";
 
 const tokenAddress = WETH_ADDRESS;
-const amountIn = ethers.parseUnits("0.0001", 18);
+const amountIn = ethers.parseUnits("0.0001", 18); // Change decimals if using USDT or depending on token decimals
 
-const tokenId = 3;
+const tokenId = 1;
 const ownerAddressOfTokenId = "0xf7ABBCaa52e051d10215414Dd694451Af4bF9111"; // AKA as the recipient of the donation
+
+// For simplicity
+const slippageWETH = "0";
+const slippageHDT = "0";
 // -------- Change For Testing --------
 
 // HumbleDonations Contract Instance
@@ -46,6 +51,8 @@ async function Payable() {
   try {
     console.log("START");
 
+    // Check whitelist via merkle proof
+    const proof = await validateToken(tokenAddress);
     const taxPercentage = await HumbleDonationsInstance.getPercentage();
     const taxDecimal = taxPercentage.toString() / 10;
     console.log("Tax Percentage:", taxDecimal.toString(), "%");
@@ -96,6 +103,9 @@ async function Payable() {
       tokenId,
       tokenAddress,
       amountIn,
+      slippageWETH,
+      slippageHDT,
+      proof,
       { gasLimit: "1000000" }
     );
     const paymentReceipt = await payTokenOwnerTx.wait();
@@ -193,3 +203,17 @@ async function Payable() {
 }
 
 Payable();
+
+async function validateToken(tokenInput) {
+  console.log("validateToken tokenInput address:", tokenInput);
+  const checkWhiteListProof = await computeMerkleProof(tokenInput);
+  console.log("checkWhiteListProof log:", checkWhiteListProof);
+
+  if (checkWhiteListProof.length > 0) {
+    console.log(`Token at address ${tokenInput} is in the whitelist.`);
+  } else {
+    console.log(`Token at address ${tokenInput} is NOT in the whitelist.`);
+  }
+
+  return checkWhiteListProof;
+}

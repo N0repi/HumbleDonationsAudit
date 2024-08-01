@@ -26,9 +26,9 @@ This repo is a hardhat enviroment. The contract (and interface) I would like aud
 
 Verified contract is live on Sepolia
 
-Implementation contract: [0xB9fe62Fbd99B3A57699B4f10b246e69761D9FEB4](https://sepolia.etherscan.io/address/0xB9fe62Fbd99B3A57699B4f10b246e69761D9FEB4)
+Implementation contract: [0x23F02AE5a4331EF595C74Cb86bdb2A99B3940727](https://sepolia.etherscan.io/address/0x23F02AE5a4331EF595C74Cb86bdb2A99B3940727)
 
-Proxy contract: [0xA065893FAd2802231684B067f2788D0BDEf8aDCd](https://sepolia.etherscan.io/address/0xA065893FAd2802231684B067f2788D0BDEf8aDCd)
+Proxy contract: [0xc0D69FE23f5B83EcFBC5D0A5025f780170BeB529](https://sepolia.etherscan.io/address/0xc0D69FE23f5B83EcFBC5D0A5025f780170BeB529)
 
 I can happily provide more scripts at request.
 
@@ -53,7 +53,7 @@ yarn node test/mint_CreateProject.js
 yarn node test/burnDelete_CreateProject.js
 ```
 
-Project created using [test/mint_CreateProject.js] with the `contractAddress` of `0xB9fe62Fbd99B3A57699B4f10b246e69761D9FEB4` are viewable on [humbledonations.com](https://www.humbledonations.com/donate)
+Project created using [test/mint_CreateProject.js] with the `contractAddress` of `0xc0D69FE23f5B83EcFBC5D0A5025f780170BeB529` are viewable on [humbledonations.com](https://www.humbledonations.com/donate)
 
 Making donations requires the use of two different wallet addresses- one for the sender and one for the recipient.
 Please see the comments in [test/donateERC20.mjs](https://github.com/N0repi/HumbleDonationsAudit/tree/main/test/donateERC20.mjs) to adjust which tokens are being donated.
@@ -65,3 +65,11 @@ yarn node test/donateETH.mjs
 ```
 
 To use the hardhat commands, a .env file will need to be created which defines API_URL_SEPOLIA (or desired network) and PRIVATE_KEY
+
+8/1/24
+4 Contract changes have been made:
+
+- Slightly altered the integer calculations in `swapExactInputSingleETH` to help prevent `amountIn` from being 0
+- Contract is using SafeERC20 for IERC20 | This was primarily added to support USDT
+- Added a ERC20 whitelist in the form of a merkle tree proofs | limiting the risk of users receiving malicious tokens as donations
+- Slippage is being passed to `donate` and swap functions to limit the risk of sandwich attacks (slippage is set to 0 in test scripts for simplicity)

@@ -5,7 +5,7 @@ require("dotenv").config();
 const { ethers, upgrades } = require("hardhat");
 
 const MY_ADDRESS = process.env.MY_ADDRESS;
-const Proxy = "0xA065893FAd2802231684B067f2788D0BDEf8aDCd";
+const Proxy = "0xbA98b648513b31ADC84F07Bb1eF058EE87965707";
 
 async function main() {
   const latestBlock = await hre.ethers.provider.getBlock("latest");
@@ -32,6 +32,11 @@ async function main() {
 //   console.log("Contract deployed to address:", HumbleDonations.address);
 // }
 
+/*
+---Poxy & implementation---
+0xa653f4d5241332d30395761645763c6ff383b31f | implementation
+0xbA98b648513b31ADC84F07Bb1eF058EE87965707 | proxy
+*/
 main()
   .then(() => process.exit(0))
   .catch((error) => {

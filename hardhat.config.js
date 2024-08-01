@@ -28,21 +28,6 @@ module.exports = {
       url: process.env.API_URL_SEPOLIA,
       accounts: [process.env.PRIVATE_KEY],
     },
-    mumbai: {
-      chainID: 80001,
-      url: process.env.API_URL_MUMBAI,
-      accounts: [process.env.PRIVATE_KEY],
-    },
-    goerli: {
-      chanID: 5,
-      url: process.env.API_URL_GOERLI,
-      accounts: [process.env.PRIVATE_KEY],
-    },
-    arbitrum_goerli: {
-      chainID: 421613,
-      url: process.env.API_URL_ARBITRUMGOERLI,
-      accounts: [process.env.PRIVATE_KEY],
-    },
     arbitrum_sepolia: {
       chainID: 421614,
       url: process.env.API_URL_ARBITRUMSEPOLIA,

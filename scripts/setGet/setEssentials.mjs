@@ -5,7 +5,9 @@ dotenv.config();
 import HumbleDonations from "../../artifacts/contracts/HumbleDonations.sol/HumbleDonations.json" assert { type: "json" };
 import { ethers } from "ethers";
 
-const contractAddress = "0xB9fe62Fbd99B3A57699B4f10b246e69761D9FEB4";
+import { callCompute } from "../whiteList/merkleRoot.mjs";
+
+const contractAddress = "0xc0D69FE23f5B83EcFBC5D0A5025f780170BeB529";
 
 const privateKey = process.env.PRIVATE_KEY;
 
@@ -28,9 +30,16 @@ async function setVariables() {
     const txHDT = await contract.setHDT(HDT);
     await txHDT.wait();
     console.log("HDT set successfully!");
+
     const txWETH = await contract.setWETH(WETH);
     await txWETH.wait();
     console.log("WETH set successfully!");
+
+    const merkleRoot = await callCompute();
+    console.log("Merkle Root from callCompute:", merkleRoot);
+    const txWhiteList = await contract.setMerkleRoot(merkleRoot);
+    await txWhiteList.wait();
+    console.log("Token Whitelist set successfully!");
   } catch (error) {
     console.error("Error setting", error);
   }

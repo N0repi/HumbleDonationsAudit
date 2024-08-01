@@ -2,12 +2,13 @@
 
 // HumbleDonations.sol
 
-pragma solidity >=0.7.0 <0.8.26;
+pragma solidity >=0.8.20;
 pragma abicoder v2;
 
 // NonUpgradeable
 import "./IHumbleDonations.sol";
-import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
 //
 // Swap
 import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
@@ -21,6 +22,8 @@ import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721URISto
 import "@openzeppelin/contracts-upgradeable/token/ERC721/extensions/ERC721BurnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
+
+using SafeERC20 for IERC20;
 
 // Interface for WETH to wrap ether
 interface IWETH {
@@ -90,6 +93,7 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
     uint256 public fees; // fees for safeMint - may be unnecessary
     uint24 public constant poolFee = 3000; // uni pool fee med
     uint256 private _tokenIdCounter; // Counter for token IDs
+    bytes32 public merkleRoot;
     // -----DECLARATIONS-----
 
 
@@ -139,26 +143,36 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
         WETH = _WETH;
     }
 
+    // Set the mintRate for minting ERC721 token 
+    function set_mintRate(uint256 _mintRate) external onlyOwner {
+        mintRate = _mintRate; // 0.0001 ether mintRate upon deployment
+    }
+    // Get the mintRate value
+    function get_mintRate() external view returns (uint256) {
+        return mintRate;
+    }
 
     // Set taxPercentage
     function setTaxPercentage(uint256 tax) external onlyOwner {
         // tax = 15 == 1.5%;
         taxPercentage = tax;
     }
-    // Set the mintRate for minting ERC721 token 
-    function set_mintRate(uint256 _mintRate) external onlyOwner {
-        mintRate = _mintRate; // 0.0001 ether mintRate upon deployment
-    }
-
     // Get tax percentage
     function getPercentage() external view returns (uint256) {
         return taxPercentage;
     }
-    // Get the mintRate value
-    function get_mintRate() external view returns (uint256) {
-        return mintRate;
+
+    // set Merkle Root of token whitelist
+    function setMerkleRoot(bytes32 _merkleRoot) external onlyOwner {
+        merkleRoot = _merkleRoot;
     }
     // ------SET/CHANGE VARIABLES AFTER DEPLOYMENT------
+
+   // Helper function to check if token is whitelisted
+    function isTokenWhitelisted(address erc20Token, bytes32[] calldata proof) public view returns (bool) {
+        bytes32 leaf = keccak256(abi.encodePacked(erc20Token));
+        return MerkleProof.verify(proof, merkleRoot, leaf);
+    }
 
 
     // -----COUNTER-----
@@ -219,11 +233,12 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
     // -----ROUTER LOGIC-----
     function swapExactInputSingle(
         address tokenIn,
-        uint256 amountIn
+        uint256 amountIn,
+        uint256 slippageWETH,
+        uint256 slippageHDT
     ) internal returns (uint256 amountOut) {
         // Transfer amountIn of tokenIn to this contract
-        TransferHelper.safeTransferFrom(
-            tokenIn,
+        IERC20(tokenIn).safeTransferFrom(
             msg.sender,
             address(this),
             amountIn
@@ -244,10 +259,10 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
             oneQuarterWETH = amountIn / 4;
 
             // Transfer 50% WETH to recipient2
-            TransferHelper.safeTransfer(WETH, recipient2, halfWETH);
+            IERC20(WETH).safeTransfer(recipient2, halfWETH);
 
             // Transfer 25% WETH to recipient1
-            TransferHelper.safeTransfer(WETH, recipient1, oneQuarterWETH);
+            IERC20(WETH).safeTransfer(recipient1, oneQuarterWETH);
 
         } else {
             // Swap 100% of amountIn to WETH
@@ -258,7 +273,7 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
                     fee: poolFee,
                     recipient: address(this),
                     amountIn: amountIn,
-                    amountOutMinimum: 0,
+                    amountOutMinimum: slippageWETH,
                     sqrtPriceLimitX96: 0
                 });
             // Executes the swap
@@ -273,10 +288,10 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
             oneQuarterWETH = amountOut / 4;
 
             // Transfer 50% WETH to recipient2
-            TransferHelper.safeTransfer(WETH, recipient2, halfWETH);
+            IERC20(WETH).safeTransfer(recipient2, halfWETH);
 
             // Transfer 25% WETH to recipient1
-            TransferHelper.safeTransfer(WETH, recipient1, oneQuarterWETH);
+            IERC20(WETH).safeTransfer(recipient1, oneQuarterWETH);
         }
 
         // Approving 1/4 WETH for swap to HDT
@@ -290,14 +305,14 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
                 fee: poolFee,
                 recipient: address(this),
                 amountIn: oneQuarterWETH,
-                amountOutMinimum: 0,
+                amountOutMinimum: slippageHDT,
                 sqrtPriceLimitX96: 0
             });
         // Executes the swap
         uint256 amountOutHDT = swapRouter.exactInputSingle(params);
 
         // Transfer 25% HDT to recipient1
-        TransferHelper.safeTransfer(HDT, recipient1, amountOutHDT);
+        IERC20(HDT).safeTransfer(recipient1, amountOutHDT);
     }
 
     /* 
@@ -305,13 +320,14 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
     which eliminates the need for safeApprove, thereby optimizing efficiency. 
     */ 
     function swapExactInputSingleETH(
-        uint256 amountIn
+        uint256 amountIn,
+        uint256 slippageHDT
     ) internal returns (uint256 amountOut) {
-        uint256 minOut = 0; // Set the minimum output amount to 0 for simplicity
-        uint160 priceLimit = 0; // Set the price limit to 0 for simplicity
+        require(amountIn > 0, "Amount in must be greater than 0");
 
         // Declared 3/4 of amountIn for wrapping
-        uint256 threeQuartersETH = amountIn * 3 / 4;
+        uint256 threeQuartersETH = (amountIn * 3) / 4;
+        require(threeQuartersETH > 0, "Three quarters of amountIn must be greater than 0");
 
         // Wrap 75% ETH to WETH
         IWETH(WETH).deposit{value: threeQuartersETH}();
@@ -335,8 +351,8 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
             fee: poolFee,
             recipient: address(this),
             amountIn: oneQuarterWETH,
-            amountOutMinimum: minOut,
-            sqrtPriceLimitX96: priceLimit
+            amountOutMinimum: slippageHDT,
+            sqrtPriceLimitX96: 0
         });
         // Executes the swap
         amountOut = swapRouter.exactInputSingle{value: oneQuarterWETH}(params);
@@ -351,7 +367,10 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
     function donate(
         uint256 tokenId,
         address erc20Token,
-        uint256 amount
+        uint256 amount,
+        uint256 slippageWETH,
+        uint256 slippageHDT,
+        bytes32[] calldata proof
     ) external payable nonReentrant {
         // Ensure the sender is not the token owner
         address tokenOwner = ownerOf(tokenId);
@@ -361,6 +380,7 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
             bytes(tokenIdToProjectTitle[tokenId]).length > 0,
             "Project title not set"
         );
+
         uint256 total;
         uint256 taxAmount = (amount * taxPercentage) / 1000;
 
@@ -373,11 +393,14 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
                 require(msg.value >= amount, "Incorrect amount of ETH sent");
 
                 // Perform the multihop swap, including wrapping of ETH if needed
-                swapExactInputSingleETH(taxAmount); 
+                swapExactInputSingleETH(taxAmount, slippageHDT); 
                 payable(tokenOwner).transfer(total);
 
             // ---If ERC-20 is donated---
             } else {
+                // Whitelist  |  Checks whether input erc20Token is listed in the merkle proof
+                require(isTokenWhitelisted(erc20Token, proof), "Token is not whitelisted");
+
                 require(
                     tokenContract.allowance(msg.sender, address(this)) >= amount,
                     "Insufficient allowance"
@@ -386,13 +409,14 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
 
                 swapExactInputSingle(
                     erc20Token,
-                    taxAmount
+                    taxAmount,
+                    slippageWETH,
+                    slippageHDT
                 );
-                require(
-                    // Transfer total amount to the contract | eg. 98.5%
-                    tokenContract.transferFrom(msg.sender, tokenOwner, total),
-                    "Transfer total failed"
-                );
+
+                // Transfer total amount to the contract | eg. 98.5%
+                tokenContract.safeTransferFrom(msg.sender, tokenOwner, total);
+                    
             }
         // ---If ERC-20 tax-exempt token is donated (HDT)---
         } else {
@@ -404,11 +428,8 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
                 "Insufficient allowance"
             );
 
-            require(
-                // Transfer total amount to the contract | 100%
-                tokenContract.transferFrom(msg.sender, tokenOwner, total),
-                "Transfer total failed"
-            );
+            // Transfer total amount to the contract | eg. 98.5%
+            tokenContract.safeTransferFrom(msg.sender, tokenOwner, total);
         }
         // emits event to track donations via The Graph
         emit DonationMade(tokenId, msg.sender, erc20Token, total, block.timestamp);
@@ -475,5 +496,5 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
 
 
     // Reserved slots for future upgrades
-    uint256[50] private __gap;
+    uint256[200] private __gap;
 }

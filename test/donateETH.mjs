@@ -15,12 +15,14 @@ const provider = new ethers.JsonRpcProvider(API_URL);
 const signer = new ethers.Wallet(WALLET_SECRET, provider);
 
 // -------- Change For Testing --------
-const contractAddress = "0xB9fe62Fbd99B3A57699B4f10b246e69761D9FEB4";
+const contractAddress = "0xc0D69FE23f5B83EcFBC5D0A5025f780170BeB529";
 
 const amountIn = ethers.parseUnits("0.0001", 18);
 
-const tokenId = 3;
+const tokenId = 1;
 const ownerAddressOfTokenId = "0xf7ABBCaa52e051d10215414Dd694451Af4bF9111"; // AKA as the recipient of the donation
+const slippageWETH = "0";
+const slippageHDT = "0";
 // -------- Change For Testing --------
 
 // HumbleDonations Contract Instance
@@ -53,6 +55,9 @@ async function Payable() {
       tokenId,
       "0x0000000000000000000000000000000000000000",
       amountIn,
+      slippageWETH,
+      slippageHDT,
+      [],
       {
         // gasLimit: "1000000",
         value: amountIn,

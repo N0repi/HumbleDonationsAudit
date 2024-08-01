@@ -1,6 +1,6 @@
 // deploy-HumbleDonations.js
 
-// Sepolia address: 0xB9fe62Fbd99B3A57699B4f10b246e69761D9FEB4
+// Sepolia address: 0xc0D69FE23f5B83EcFBC5D0A5025f780170BeB529
 
 require("dotenv").config();
 const { ethers, upgrades } = require("hardhat");
