@@ -13,6 +13,19 @@ Humble Donations allows users to create a project (minting an ERC721 token) and 
 
 HDT is also used as a governance token which does also not appear in this repository.
 
+## Scope of Audit
+
+Just the HumbleDonations.sol file. The IHumbleDonations.sol interface is just used to define events and does not need auditing.
+
+Some stuff that might need review:
+
+- The integer division in the functions `swapExactInputSingle` and `swapExactInputSingleETH` may need some extra attention. The division hasn't caused any issues in my tests, but it might be worth keeping an eye on since Solidity doesn't support floats, etc.
+- On line 106, address `newImplementation`, is unused and gives a warning but I don't really think that's problematic.
+- I haven't done any kind of invariance testing, so a fuzz test may be useful.
+- The merkle root stores a token list array which is used as a white list the function `donate`. I think this will protect against DoS attacks, but I have not extensively tested. I figured a white list was better than no white list.
+
+Please let me know if you have any questions
+
 ## Expected Behavior of HumbleDonations.sol
 
 _This are the current rules that I've implemented for the contract_
