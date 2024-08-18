@@ -8,13 +8,13 @@ import HumbleDonations from "../artifacts/contracts/HumbleDonations.sol/HumbleDo
 const { abi: HumbleDonationsAbi } = HumbleDonations;
 
 const USDT_ADDRESS = "0xaA8E23Fb1079EA71e0a56F48a2aA51851D8433D0"; // Sepolia | 6 decimals
-const WALLET_ADDRESS = "0xf7ABBCaa52e051d10215414Dd694451Af4bF9111"; // Your wallet address
+const WALLET_ADDRESS = "0xF0f472619cCE62B7d54dF3Bf17c4335EF311F1A5"; // Your wallet address
 const WALLET_SECRET = process.env.PRIVATE_KEY2;
 const API_URL = process.env.API_URL_SEPOLIA; // Sepolia
 const provider = new ethers.JsonRpcProvider(API_URL);
 const signer = new ethers.Wallet(WALLET_SECRET, provider);
 
-const contractAddress = "0xc0D69FE23f5B83EcFBC5D0A5025f780170BeB529";
+const contractAddress = "0x977428b2547A247848E2DD736B760c80da192b06";
 const tokenAddress = USDT_ADDRESS;
 const amountIn = ethers.parseUnits("100", 6);
 console.log("amountIn:", amountIn);

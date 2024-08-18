@@ -5,7 +5,7 @@ require("dotenv").config();
 const { ethers, upgrades } = require("hardhat");
 
 const MY_ADDRESS = process.env.MY_ADDRESS;
-const Proxy = "0xbA98b648513b31ADC84F07Bb1eF058EE87965707";
+const Proxy = "0x977428b2547A247848E2DD736B760c80da192b06";
 
 async function main() {
   const latestBlock = await hre.ethers.provider.getBlock("latest");

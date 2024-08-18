@@ -4,7 +4,7 @@ const hre = require("hardhat");
 const { ethers } = require("hardhat");
 
 async function main() {
-  const contractAddress = "0xc0D69FE23f5B83EcFBC5D0A5025f780170BeB529";
+  const contractAddress = "0x977428b2547A247848E2DD736B760c80da192b06";
 
   const recieverAddress = "0xf7ABBCaa52e051d10215414Dd694451Af4bF9111";
 
@@ -17,7 +17,7 @@ async function main() {
   const uri = ""; /*
   This is frontend logic that isn't important to the contract. 
   Regardless of what you pass as `uri`, the minted tokenId can be viewed from the frontend https://www.humbledonations.com/donate
-  if minted with contradAddress "0xc0D69FE23f5B83EcFBC5D0A5025f780170BeB529"
+  if minted with contradAddress "0x977428b2547A247848E2DD736B760c80da192b06"
 
   Essentially, formatting the uri as a JSON with the following fields will create a dynamic route on the frontend. 
   An example uri below:
@@ -25,7 +25,7 @@ async function main() {
 
   Is being rendered on https://www.humbledonations.com/projects/Example%20Title
   */
-  const projectTitle = "projectTestID2"; // any name that has not been previously used will suffice
+  const projectTitle = "projectTestID3"; // any name that has not been previously used will suffice
 
   const mintTokens = await HumbleDonations.safeMint(
     recieverAddress,

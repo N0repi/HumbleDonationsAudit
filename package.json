@@ -1,6 +1,7 @@
 {
   "name": "HumbleDonationsContracts",
   "version": "1.0.0",
+  "type": "module",
   "description": "made for auditing",
   "main": "index.js",
   "author": "Norepi",
@@ -34,8 +35,11 @@
     "@uniswap/universal-router-sdk": "^1.6.0",
     "@uniswap/v3-core": "^1.0.1",
     "@uniswap/v3-periphery": "^1.4.4",
+    "@urql/core": "^5.0.6",
     "dotenv": "^16.4.5",
+    "graphql": "^16.9.0",
     "keccak256": "^1.0.6",
-    "merkletreejs": "^0.4.0"
+    "merkletreejs": "^0.4.0",
+    "urql": "^4.1.0"
   }
 }

@@ -7,7 +7,7 @@ import { ethers } from "ethers";
 
 import { callCompute } from "../whiteList/merkleRoot.mjs";
 
-const contractAddress = "0xc0D69FE23f5B83EcFBC5D0A5025f780170BeB529";
+const contractAddress = "0x977428b2547A247848E2DD736B760c80da192b06";
 
 const privateKey = process.env.PRIVATE_KEY;
 

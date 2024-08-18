@@ -1,0 +1,48 @@
+{
+  "data": {
+    "projects": [
+      {
+        "id": "0",
+        "owner": "0xf0f472619cce62b7d54df3bf17c4335ef311f1a5",
+        "projectTitle": "MerkleTree WhiteList test",
+        "uri": "{\"title\":\"MerkleTree WhiteList test\",\"body\":\"w2\\nSubgraph NOC v0.0.11\",\"tag\":[\"Non-Profit\",\"Artistic\"],\"website\":\"\",\"twitter\":\"\",\"discord\":\"\",\"youtube\":\"\",\"twitch\":\"a\",\"reel\":\"\",\"github\":\"a\"}"
+      },
+      {
+        "id": "2",
+        "owner": "0x9ffb39e46ba9d957957808967fd59ce3b62cd304",
+        "projectTitle": "Test project 3",
+        "uri": "{\"title\":\"Test project 3\",\"body\":\"w3\",\"tag\":[\"Content Creator\",\"Educational\"],\"website\":\"\",\"twitter\":\"\",\"discord\":\"\",\"youtube\":\"\",\"twitch\":\"\",\"reel\":\"\",\"github\":\"\"}"
+      },
+      {
+        "id": "21",
+        "owner": "0xf7abbcaa52e051d10215414dd694451af4bf9111",
+        "projectTitle": "Test Project 19",
+        "uri": "{\"title\":\"Test Project 19\",\"body\":\"w1\",\"tag\":[\"DeFi\"],\"website\":\"\",\"twitter\":\"\",\"discord\":\"\",\"youtube\":\"\",\"twitch\":\"\",\"reel\":\"\",\"github\":\"\"}"
+      },
+      {
+        "id": "22",
+        "owner": "0x8f56e13f1f10aded6e1133e7be294fac82169c66",
+        "projectTitle": "projectTestID123",
+        "uri": ""
+      },
+      {
+        "id": "3",
+        "owner": "0x88b944e7e3d495b88caa62fb0158f697c9a1561d",
+        "projectTitle": "Test project 4",
+        "uri": "{\"title\":\"Test project 4\",\"body\":\"w4\",\"tag\":[\"Non-Profit\"],\"website\":\"\",\"twitter\":\"\",\"discord\":\"\",\"youtube\":\"\",\"twitch\":\"\",\"reel\":\"\",\"github\":\"\"}"
+      },
+      {
+        "id": "4",
+        "owner": "0x68b43a1c7dfc773ac84c37a62bfa76e3055b7074",
+        "projectTitle": "Test project 5",
+        "uri": "{\"title\":\"Test project 5\",\"body\":\"w5\",\"tag\":[\"DeFi\"],\"website\":\"\",\"twitter\":\"\",\"discord\":\"\",\"youtube\":\"\",\"twitch\":\"\",\"reel\":\"\",\"github\":\"\"}"
+      },
+      {
+        "id": "5",
+        "owner": "0xfac8c2b6e70a67a3b133f4885fbd6f46cb865753",
+        "projectTitle": "Test project 6",
+        "uri": "{\"title\":\"Test project 6\",\"body\":\"w6\",\"tag\":[\"Content Creator\"],\"website\":\"\",\"twitter\":\"\",\"discord\":\"\",\"youtube\":\"\",\"twitch\":\"\",\"reel\":\"\",\"github\":\"\"}"
+      }
+    ]
+  }
+}

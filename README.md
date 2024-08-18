@@ -39,9 +39,9 @@ This repo is a hardhat enviroment. The contract (and interface) I would like aud
 
 Verified contract is live on Sepolia
 
-Implementation contract: [0x23F02AE5a4331EF595C74Cb86bdb2A99B3940727](https://sepolia.etherscan.io/address/0x23F02AE5a4331EF595C74Cb86bdb2A99B3940727)
+Implementation contract: [0x72BBf9d2EBf7E79D56B071DcB28ffDCef95B4D0f](https://sepolia.etherscan.io/address/0x23F02AE5a4331EF595C74Cb86bdb2A99B3940727)
 
-Proxy contract: [0xc0D69FE23f5B83EcFBC5D0A5025f780170BeB529](https://sepolia.etherscan.io/address/0xc0D69FE23f5B83EcFBC5D0A5025f780170BeB529)
+Proxy contract: [0x977428b2547A247848E2DD736B760c80da192b06](https://sepolia.etherscan.io/address/0x977428b2547A247848E2DD736B760c80da192b06)
 
 I can happily provide more scripts at request.
 
@@ -66,7 +66,7 @@ yarn node test/mint_CreateProject.js
 yarn node test/burnDelete_CreateProject.js
 ```
 
-Project created using [test/mint_CreateProject.js] with the `contractAddress` of `0xc0D69FE23f5B83EcFBC5D0A5025f780170BeB529` are viewable on [humbledonations.com](https://www.humbledonations.com/donate)
+Project created using [test/mint_CreateProject.js] with the `contractAddress` of `0x977428b2547A247848E2DD736B760c80da192b06` are viewable on [humbledonations.com](https://www.humbledonations.com/donate)
 
 Making donations requires the use of two different wallet addresses- one for the sender and one for the recipient.
 Please see the comments in [test/donateERC20.mjs](https://github.com/N0repi/HumbleDonationsAudit/tree/main/test/donateERC20.mjs) to adjust which tokens are being donated.

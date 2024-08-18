@@ -15,7 +15,7 @@ const provider = new ethers.JsonRpcProvider(API_URL);
 const signer = new ethers.Wallet(WALLET_SECRET, provider);
 
 // -------- Change For Testing --------
-const contractAddress = "0xc0D69FE23f5B83EcFBC5D0A5025f780170BeB529";
+const contractAddress = "0x977428b2547A247848E2DD736B760c80da192b06";
 
 const amountIn = ethers.parseUnits("0.0001", 18);
 

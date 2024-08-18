@@ -27,9 +27,9 @@ const hdtContract = new ethers.Contract(HDT_ADDRESS, erc20Abi, signer);
 const usdcContract = new ethers.Contract(USDC_ADDRESS, erc20Abi, signer);
 
 // -------- Change For Testing --------
-const contractAddress = "0xc0D69FE23f5B83EcFBC5D0A5025f780170BeB529";
+const contractAddress = "0x977428b2547A247848E2DD736B760c80da192b06";
 
-const tokenAddress = WETH_ADDRESS;
+const tokenAddress = HDT_ADDRESS;
 const amountIn = ethers.parseUnits("0.0001", 18); // Change decimals if using USDT or depending on token decimals
 
 const tokenId = 1;

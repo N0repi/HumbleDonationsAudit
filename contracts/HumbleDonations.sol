@@ -67,6 +67,7 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
         __UUPSUpgradeable_init();
         __ReentrancyGuard_init();
         
+        _tokenIdCounter = 1;
         taxPercentage = 15;
         mintRate = 0.0001 ether;
         upgradeCount = 0;
@@ -90,9 +91,8 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
     address public WETH;
     uint256 public taxPercentage;
     uint256 public mintRate; // mintRate for safeMint
-    uint256 public fees; // fees for safeMint - may be unnecessary
     uint24 public constant poolFee = 3000; // uni pool fee med
-    uint256 private _tokenIdCounter; // Counter for token IDs
+    uint256 private _tokenIdCounter; // Counter for token IDs  |  # initialized to 1 to make safeMint checks valid
     bytes32 public merkleRoot;
     // -----DECLARATIONS-----
 
@@ -154,6 +154,8 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
 
     // Set taxPercentage
     function setTaxPercentage(uint256 tax) external onlyOwner {
+        // # set limit to tax rate
+        require(tax <= 300, "tax cannot be higher than 30%");
         // tax = 15 == 1.5%;
         taxPercentage = tax;
     }
@@ -188,7 +190,7 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
         string memory uri,
         string memory projectTitle
     ) external payable nonReentrant {
-        require(msg.value >= fees + mintRate, "Not enough ETH sent");
+        require(msg.value >= mintRate, "Not enough ETH sent");
         require(balanceOf(to) == 0, "Address already owns a token");
         require(
             projectTitleToTokenId[projectTitle] == 0,
@@ -209,6 +211,26 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
         emit ProjectCreated(tokenId, to, projectTitle, uri, block.timestamp);
     }
     // -----CREATE PROJECT-----
+
+
+    // -----TRANSFER PROJECT OVERRIDE-----
+    /*
+    # Override the _transfer function
+    Prevents transfering a project to address
+    which has ownership over another project
+    */
+    function transferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) public virtual override(ERC721Upgradeable, IERC721) {
+        // Ensure the recipient does not already own a token
+        require(balanceOf(to) == 0, "Recipient already owns a project NFT");
+
+        // Proceed with the normal transfer operation
+        super.transferFrom(from, to, tokenId);
+    }
+    // -----TRANSFER PROJECT OVERRIDE-----
 
 
     // -----CHECKS FOR OWNERSHIP-----
@@ -312,7 +334,8 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
         uint256 amountOutHDT = swapRouter.exactInputSingle(params);
 
         // Transfer 25% HDT to recipient1
-        IERC20(HDT).safeTransfer(recipient1, amountOutHDT);
+        IERC20(HDT).safeTransfer(recipient1, amountOutHDT); 
+        // burn address 0x00000000000000000
     }
 
     /* 
@@ -381,6 +404,12 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
             "Project title not set"
         );
 
+        // # Prevents donations for tokenOwners that own more than one token
+        require(balanceOf(tokenOwner) <= 1, "Token owner already owns more than one project NFT");
+
+        // # Check to require that amount is greater than 0
+        require(amount > 0, "Input amount cannot be 0");
+
         uint256 total;
         uint256 taxAmount = (amount * taxPercentage) / 1000;
 
@@ -393,8 +422,11 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
                 require(msg.value >= amount, "Incorrect amount of ETH sent");
 
                 // Perform the multihop swap, including wrapping of ETH if needed
-                swapExactInputSingleETH(taxAmount, slippageHDT); 
-                payable(tokenOwner).transfer(total);
+                swapExactInputSingleETH(taxAmount, slippageHDT);
+
+                // # Using call method because call does not have a fixed gas lmit. Using payable for safety
+                (bool success, ) = payable(tokenOwner).call{value: total}("");
+                require(success, "ETH transfer failed");
 
             // ---If ERC-20 is donated---
             } else {
@@ -439,10 +471,23 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
 
     // -----DELETE PROJECT-----
     function burnToken(uint256 tokenId) external {
-        // Only the owner of the token can burn the token
+        // Function called to delete a project & burn associated ERC-721 project
         address previousOwner = ownerOf(tokenId);
+
+        // Only the owner of the token can burn the token
         require(ownerOf(tokenId) == msg.sender, "Caller is not the owner");
+
+        // Retrieve the project title before burning the token
+        string memory projectTitle = tokenIdToProjectTitle[tokenId];
+
+        // Burn token
         _burn(tokenId);
+
+        // Remove the tokenId from tokenIdToProjectTitle mapping
+        delete tokenIdToProjectTitle[tokenId];
+
+        // Remove the projectTitle from projectTitleToTokenId mapping
+        delete projectTitleToTokenId[projectTitle];
 
         // emits token being burned, the owner of the token before it was burned, the burn address, and the current time stamp
         emit ProjectDeleted(tokenId, previousOwner, address(0), block.timestamp);
@@ -486,7 +531,7 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
             "Insufficient token balance"
         );
 
-        // Transfer the ERC-20 tokens to the contract owner
+        // # safeTransfer the ERC-20 tokens to the contract owner
         require(
             tokenContract.transfer(msg.sender, amount),
             "Token transfer failed"
