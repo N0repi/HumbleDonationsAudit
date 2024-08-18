@@ -532,10 +532,7 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
         );
 
         // # safeTransfer the ERC-20 tokens to the contract owner
-        require(
-            tokenContract.transfer(msg.sender, amount),
-            "Token transfer failed"
-        );
+        tokenContract.safeTransfer(msg.sender, amount);
     }
     // -----WITHDRAW-----
 
