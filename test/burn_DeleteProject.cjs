@@ -15,7 +15,7 @@ async function main() {
   There is no get-hook in the contract which returns the tokenId of a project.
   In the frontend, this is handled by The Graph indexing the emitted event at the end of `safeMint`
   */
-  const tokenId = "2";
+  const tokenId = "1";
 
   const burnTokenTx = await HumbleDonations.burnToken(tokenId);
 

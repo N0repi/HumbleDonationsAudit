@@ -20,3 +20,6 @@ ignition/deployments/chain-31337
 
 # draft rules
 GeneralRulesOfHumbleDonations.txt
+
+# unused airdrop file
+scripts/deployAirdrop/notUsed
