@@ -6,13 +6,35 @@ require("dotenv").config();
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
   solidity: {
-    version: "0.8.20",
-    settings: {
-      optimizer: {
-        enabled: true,
-        runs: 200,
+    compilers: [
+      {
+        version: "0.8.20",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
       },
-    },
+      {
+        version: "0.8.19",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      },
+      {
+        version: "0.8.4",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      },
+    ],
   },
   paths: {
     sources: "./contracts",
@@ -32,6 +54,11 @@ module.exports = {
       chainID: 421614,
       url: process.env.API_URL_ARBITRUMSEPOLIA,
       accounts: [process.env.PRIVATE_KEY],
+    },
+    sonic: {
+      chainId: 64165,
+      url: "https://rpc.sonic.fantom.network/",
+      accounts: [process.env.SONIC_PRIVATE_KEY],
     },
   },
   etherscan: {

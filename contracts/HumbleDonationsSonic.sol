@@ -9,8 +9,6 @@ pragma abicoder v2;
 import "./IHumbleDonations.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
-import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
-
 //
 // Swap
 import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
@@ -32,7 +30,7 @@ interface IWETH {
     function deposit() external payable;
 }
 
-contract HumbleDonations is IHumbleDonations,
+contract HumbleDonationsSonic is IHumbleDonations,
 Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgradeable
 {
     /// @custom:oz-upgrades-unsafe-allow constructor state-variable-immutable
@@ -40,21 +38,9 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
     constructor() {
         _disableInitializers();
     }
-
-    /* 
-    ****
-    Ideally, I would like to move all of the Uniswap code to a seperate contract. 
-    However, after great attempts, I have been unable to get the ERC20 swap and 
-    swapExactInputSingleETH to succeed. Relying on a pre-defined address for 
-    SWAP_ROUTER_02 and respected functions are a weakness of this contract.
-
-    Calling to the external swap router contract directly with JS/TS result in successful
-    transactions.
-    ****
-    */
     
     // -----CONSTANTS-----
-    address private constant SWAP_ROUTER_02 = (0x3bFA4769FB09eefC5a80d6E87c3B9C650f7Ae48E);
+    address private constant SWAP_ROUTER_02 = (0xE67701aac6D40d34c43367D90FdeaE0095dc28Ba);
     /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
     IV3SwapRouter public immutable swapRouter = IV3SwapRouter(SWAP_ROUTER_02);
     // -----CONSTANTS-----
@@ -87,7 +73,6 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
     // -----DECLARATIONS-----
     address private constant recipient1 = 0xfdA30F9d6A3864f092586Cf755Fc8FCdaF8BB5Ae; // Sepolia safe
     address private constant recipient2 = 0x88b944E7E3D495B88cAa62FB0158F697C9A1561d; // dev
-    address private constant addressZeo = 0x0000000000000000000000000000000000000000;
 
     uint256 public upgradeCount; // Variable to track the number of upgrades
     address public HDT;
@@ -337,8 +322,7 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
         uint256 amountOutHDT = swapRouter.exactInputSingle(params);
 
         // Transfer 25% HDT to recipient1
-        ERC20Burnable(HDT).burn(amountOutHDT);
-        // IERC20(HDT).safeTransfer(addressZeo, amountOutHDT); 
+        IERC20(HDT).safeTransfer(recipient1, amountOutHDT); 
         // burn address 0x00000000000000000
     }
 
@@ -385,7 +369,7 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
         amountOut = swapRouter.exactInputSingle{value: oneQuarterWETH}(params);
 
         // Transfer 25% HDT to recipient1
-        ERC20Burnable(HDT).burn(amountOut);
+        TransferHelper.safeTransfer(HDT, recipient1, amountOut);
     }
     // -----ROUTER LOGIC-----
 

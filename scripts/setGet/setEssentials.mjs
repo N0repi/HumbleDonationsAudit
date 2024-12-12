@@ -2,12 +2,12 @@
 
 import dotenv from "dotenv";
 dotenv.config();
-import HumbleDonations from "../../artifacts/contracts/HumbleDonations.sol/HumbleDonations.json" assert { type: "json" };
+import HumbleDonations from "../../artifacts/contracts/HDnew/HumbleDonations.sol/HumbleDonations.json" assert { type: "json" };
 import { ethers } from "ethers";
 
 import { callCompute } from "../whiteList/merkleRoot.mjs";
 
-const contractAddress = "0x977428b2547A247848E2DD736B760c80da192b06";
+const contractAddress = "0xE4bd9253B1988Dc3F6cA8A931E03C52B4BcDe68e";
 
 const privateKey = process.env.PRIVATE_KEY;
 
@@ -27,17 +27,23 @@ const taxValue = 15; // 150 == 15%
 
 async function setVariables() {
   try {
-    const txHDT = await contract.setHDT(HDT);
+    const txHDT = await contract.setHDT(HDT, {
+      gasLimit: 10000000,
+    });
     await txHDT.wait();
     console.log("HDT set successfully!");
 
-    const txWETH = await contract.setWETH(WETH);
+    const txWETH = await contract.setWETH(WETH, {
+      gasLimit: 10000000,
+    });
     await txWETH.wait();
     console.log("WETH set successfully!");
 
     const merkleRoot = await callCompute();
     console.log("Merkle Root from callCompute:", merkleRoot);
-    const txWhiteList = await contract.setMerkleRoot(merkleRoot);
+    const txWhiteList = await contract.setMerkleRoot(merkleRoot, {
+      gasLimit: 10000000,
+    });
     await txWhiteList.wait();
     console.log("Token Whitelist set successfully!");
   } catch (error) {
