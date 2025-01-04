@@ -2,19 +2,25 @@
 
 // HumbleDonations.sol
 
+/// @dev Scope of HumbleDonations
+/*
+  Allows users to mint projects which contain webpage metadata.
+  Users can donate ERC-20 tokens or nativec currency to projects safely.
+  Have fun, stay safe!
+
+  - Norepi 
+*/
+
 pragma solidity >=0.8.20;
 pragma abicoder v2;
-
 // NonUpgradeable
 import "./IHumbleDonations.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
-//
+import "@openzeppelin/contracts/token/ERC20/extensions/ERC20Burnable.sol";
 // Swap
 import "@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol";
-import "@uniswap/swap-router-contracts/contracts/interfaces/IV3SwapRouter.sol";
-//
-// Upgradeable
+//// Upgradeable
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC721/ERC721Upgradeable.sol";
@@ -30,6 +36,25 @@ interface IWETH {
     function deposit() external payable;
 }
 
+interface ISolidlySwapRouter {
+    struct Route {
+        address from;
+        address to;
+        bool stable;
+    }
+    function swapExactTokensForTokens(
+        uint amountIn,
+        uint amountOutMin,
+        Route[] calldata routes,
+        address to,
+        uint deadline
+    ) external returns (uint[] memory amounts);
+    function swapExactETHForTokens(uint amountOutMin, Route[] calldata routes, address to, uint deadline)
+    external
+    payable
+    returns (uint[] memory amounts);
+}
+
 contract HumbleDonationsSonic is IHumbleDonations,
 Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpgradeable, OwnableUpgradeable, UUPSUpgradeable, ReentrancyGuardUpgradeable
 {
@@ -39,16 +64,22 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
         _disableInitializers();
     }
     
+    /*
+    * Testnet: 0xf08413857AF2CFBB6edb69A92475cC27EA51453b 
+    * RouterV2: 0x7635cD591CFE965bE8beC60Da6eA69b6dcD27e4b
+    * RouterV3: 0xcC6169aA1E879d3a4227536671F85afdb2d23fAD
+    * */
     // -----CONSTANTS-----
-    address private constant SWAP_ROUTER_02 = (0xE67701aac6D40d34c43367D90FdeaE0095dc28Ba);
+    
+    address private constant SWAP_ROUTER = 0xcC6169aA1E879d3a4227536671F85afdb2d23fAD;
     /// @custom:oz-upgrades-unsafe-allow state-variable-immutable
-    IV3SwapRouter public immutable swapRouter = IV3SwapRouter(SWAP_ROUTER_02);
+    ISolidlySwapRouter public immutable swapRouter = ISolidlySwapRouter(SWAP_ROUTER);
     // -----CONSTANTS-----
 
 
     // Contract is upgradable in the interest of upgrading to a Rust-based Stylus contract in the future.
     function initialize(address initialOwner) initializer public {
-        __ERC721_init("HumbleDonations", "HDproject");
+        __ERC721_init("Humble Donations", "Project");
         __ERC721URIStorage_init();
         __ERC721Burnable_init();
         __Ownable_init(initialOwner);
@@ -57,7 +88,7 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
         
         _tokenIdCounter = 1;
         taxPercentage = 15;
-        mintRate = 0.0001 ether;
+        mintRate = 0.005 ether;
         upgradeCount = 0;
     }
 
@@ -71,15 +102,14 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
 
 
     // -----DECLARATIONS-----
-    address private constant recipient1 = 0xfdA30F9d6A3864f092586Cf755Fc8FCdaF8BB5Ae; // Sepolia safe
-    address private constant recipient2 = 0x88b944E7E3D495B88cAa62FB0158F697C9A1561d; // dev
+    address private constant recipient1 = 0xBFD674dd1e4cDae881d0a9f5e9aC1C8232a38a40; // Sonic Safe
+    address private constant recipient2 = 0x12FB341C803fC94Edd0481f8BDaB1A3B971521A6; // Sonic Dev Safe
 
     uint256 public upgradeCount; // Variable to track the number of upgrades
     address public HDT;
     address public WETH;
     uint256 public taxPercentage;
     uint256 public mintRate; // mintRate for safeMint
-    uint24 public constant poolFee = 3000; // uni pool fee med
     uint256 private _tokenIdCounter; // Counter for token IDs  |  # initialized to 1 to make safeMint checks valid
     bytes32 public merkleRoot;
     // -----DECLARATIONS-----
@@ -193,8 +223,9 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
 
         // Update reverse mapping
         projectTitleToTokenId[projectTitle] = tokenId;
-
-        payable(recipient2).transfer(mintRate);
+        // Using call method because call does not have a fixed gas lmit. Using payable for safety
+        (bool success, ) = payable(recipient2).call{value: mintRate}("");
+        require(success, "Mint Rate transfer failed");
 
         emit ProjectCreated(tokenId, to, projectTitle, uri, block.timestamp);
     }
@@ -247,6 +278,8 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
         uint256 slippageWETH,
         uint256 slippageHDT
     ) internal returns (uint256 amountOut) {
+        // Deadline in same tx
+        uint256 deadline = block.timestamp;
         // Transfer amountIn of tokenIn to this contract
         IERC20(tokenIn).safeTransferFrom(
             msg.sender,
@@ -276,18 +309,22 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
 
         } else {
             // Swap 100% of amountIn to WETH
-            IV3SwapRouter.ExactInputSingleParams memory wethParams =
-                IV3SwapRouter.ExactInputSingleParams({
-                    tokenIn: tokenIn,
-                    tokenOut: WETH,
-                    fee: poolFee,
-                    recipient: address(this),
-                    amountIn: amountIn,
-                    amountOutMinimum: slippageWETH,
-                    sqrtPriceLimitX96: 0
-                });
+            ISolidlySwapRouter.Route[] memory routesToWETH = new ISolidlySwapRouter.Route[](1);
+            routesToWETH[0] = ISolidlySwapRouter.Route({
+                from: tokenIn,
+                to: WETH,
+                stable: false
+            });
+
+            uint[] memory wethParams = swapRouter.swapExactTokensForTokens(
+                amountIn,
+                slippageWETH,
+                routesToWETH,
+                address(this),
+                deadline
+            );
             // Executes the swap
-            amountOut = swapRouter.exactInputSingle(wethParams);
+            amountOut = wethParams[wethParams.length - 1];
 
             // Transfer 75% of amountIn WETH to recipients
 
@@ -308,22 +345,26 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
         TransferHelper.safeApprove(WETH, address(swapRouter), oneQuarterWETH);
 
         // Swap remaining 25% of amountIn WETH to HDT
-        IV3SwapRouter.ExactInputSingleParams memory params =
-            IV3SwapRouter.ExactInputSingleParams({
-                tokenIn: WETH,
-                tokenOut: HDT,
-                fee: poolFee,
-                recipient: address(this),
-                amountIn: oneQuarterWETH,
-                amountOutMinimum: slippageHDT,
-                sqrtPriceLimitX96: 0
-            });
-        // Executes the swap
-        uint256 amountOutHDT = swapRouter.exactInputSingle(params);
+        ISolidlySwapRouter.Route[] memory routesToHDT = new ISolidlySwapRouter.Route[](1);
+        routesToHDT[0] = ISolidlySwapRouter.Route({
+            from: WETH,
+            to: HDT,
+            stable: false
+        });
 
-        // Transfer 25% HDT to recipient1
-        IERC20(HDT).safeTransfer(recipient1, amountOutHDT); 
-        // burn address 0x00000000000000000
+        // Swap remaining 25% of WETH to HDT
+        uint[] memory amountsOut = swapRouter.swapExactTokensForTokens(
+            oneQuarterWETH,
+            slippageHDT,
+            routesToHDT,
+            address(this),
+            deadline
+        );
+        // Executes the swap
+        uint256 amountOutHDT = amountsOut[amountsOut.length - 1];
+
+        // Burn 25%, HDT
+        ERC20Burnable(HDT).burn(amountOutHDT);
     }
 
     /* 
@@ -334,6 +375,9 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
         uint256 amountIn,
         uint256 slippageHDT
     ) internal returns (uint256 amountOut) {
+        // Deadline in same tx
+        uint256 deadline = block.timestamp;
+
         require(amountIn > 0, "Amount in must be greater than 0");
 
         // Declared 3/4 of amountIn for wrapping
@@ -356,20 +400,24 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
         TransferHelper.safeTransfer(WETH, recipient1, oneQuarterWETH);
 
         // Swap 25% of amountIn ETH to HDT - because this portion of amountIn was not wrapped, no approval is required
-        IV3SwapRouter.ExactInputSingleParams memory params = IV3SwapRouter.ExactInputSingleParams({
-            tokenIn: WETH,
-            tokenOut: HDT,
-            fee: poolFee,
-            recipient: address(this),
-            amountIn: oneQuarterWETH,
-            amountOutMinimum: slippageHDT,
-            sqrtPriceLimitX96: 0
+        ISolidlySwapRouter.Route[] memory routes = new ISolidlySwapRouter.Route[](1);
+        routes[0] = ISolidlySwapRouter.Route({
+            from: WETH,
+            to: HDT,
+            stable: false
         });
-        // Executes the swap
-        amountOut = swapRouter.exactInputSingle{value: oneQuarterWETH}(params);
 
-        // Transfer 25% HDT to recipient1
-        TransferHelper.safeTransfer(HDT, recipient1, amountOut);
+        // Swap 25% WETH to HDT
+        uint[] memory amountsOut = swapRouter.swapExactETHForTokens{value: oneQuarterWETH}(
+            slippageHDT, 
+            routes,
+            address(this),
+            deadline
+        );
+        // Executes the swap
+        amountOut = amountsOut[amountsOut.length - 1];
+        // Burn 25%, HDT
+        ERC20Burnable(HDT).burn(amountOut);
     }
     // -----ROUTER LOGIC-----
 
@@ -392,10 +440,10 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
             "Project title not set"
         );
 
-        // # Prevents donations for tokenOwners that own more than one token
+        // Prevents donations for tokenOwners that own more than one ERC-721 token
         require(balanceOf(tokenOwner) <= 1, "Token owner already owns more than one project NFT");
 
-        // # Check to require that amount is greater than 0
+        // # Check to require that called amount is greater than 0
         require(amount > 0, "Input amount cannot be 0");
 
         uint256 total;
@@ -409,10 +457,10 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
                 // If the input token is ETH, ensure the sender has sent exactly the required amount
                 require(msg.value >= amount, "Incorrect amount of ETH sent");
 
-                // Perform the multihop swap, including wrapping of ETH if needed
+                // Performs swap of ETH, including wrapping ETH
                 swapExactInputSingleETH(taxAmount, slippageHDT);
 
-                // # Using call method because call does not have a fixed gas lmit. Using payable for safety
+                // Using call method because call does not have a fixed gas lmit. Using payable for safety
                 (bool success, ) = payable(tokenOwner).call{value: total}("");
                 require(success, "ETH transfer failed");
 
@@ -427,6 +475,7 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
                     
                 );
 
+                // Performs swap of ERC-20 token
                 swapExactInputSingle(
                     erc20Token,
                     taxAmount,
@@ -495,8 +544,8 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
     // -----WITHDRAW-----
     /* 
     Tokens are not intended to be held by this contract
-    This section exists to withdraw tokens sent to this contract
-    or otherwise accumulated.
+    This block exists to withdraw tokens accidently sent 
+    to or otherwise accumulated by this contract.
     */
 
     // Withdraw ETH
@@ -519,12 +568,12 @@ Initializable, ERC721Upgradeable, ERC721URIStorageUpgradeable, ERC721BurnableUpg
             "Insufficient token balance"
         );
 
-        // # safeTransfer the ERC-20 tokens to the contract owner
+        // safeTransfer the ERC-20 tokens to the contract owner
         tokenContract.safeTransfer(msg.sender, amount);
     }
     // -----WITHDRAW-----
 
 
     // Reserved slots for future upgrades
-    uint256[200] private __gap;
+    uint256[440] private __gap;
 }
